@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WebCam Demo</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" sizes="192x192" href="img/touch-icon-192x192.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="img/apple-touch-icon-180x180-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="img/apple-touch-icon-152x152-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/apple-touch-icon-144x144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="img/apple-touch-icon-120x120-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="img/apple-touch-icon-114x114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="76x76" href="img/apple-touch-icon-76x76-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/apple-touch-icon-72x72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="img/apple-touch-icon-precomposed.png">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a class="icon icon-logo logo" href="#">&nbsp;</a>
+    </div>
+  </header>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-power-off"></i> Tracking Control</h3>
+          </div>
+          <div class="panel-body text-center">
+            <button type="button" id="start" class="btn btn-success disabled"><i class="fa fa-play"></i> Start</button>
+            <button type="button" id="stop" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
+          </div>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-flask"></i> Color Tracking</h3>
+          </div>
+          <div class="panel-body">
+            <form role="form">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="cyan"> Cyan
+                  </label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="magenta"> Magenta
+                  </label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="yellow"> Yellow
+                  </label>
+                </div>
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="checkbox">
+                      <label>
+                        <input type="checkbox" id="custom"> Custom
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <input type="text" class="form-control hidden" id="customColor" value="#5367ce" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-github"></i> Open Source Libraries Used</h3>
+          </div>
+          <div class="panel-body">
+            <ul>
+              <li><a href="http://getbootstrap.com">Bootstrap</a></li>
+              <li><a href="http://jquery.com">jQuery</a></li>
+              <li><a href="http://trackingjs.com">tracking.js</a></li>
+              <li><a href="https://github.com/mjolnic/bootstrap-colorpicker">Bootstrap Colorpicker</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <i class="fa fa-video-camera"></i> Facial &amp; Color Tracking
+              <span class="pull-right"><a href="http://shinydemos.com/facekat/" target="facekat"><i class="fa fa-gamepad"></i></a></span>
+            </h3>
+          </div>
+          <div class="panel-body shaded">
+            <div class="centered">
+              <video id="video" width="640" height="480" preload autoplay loop muted></video>
+              <canvas id="canvas" width="640" height="480"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="bower_components/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
+  <script src="bower_components/tracking.js/build/tracking-min.js"></script>
+  <script src="bower_components/tracking.js/build/data/face-min.js"></script>
+  <script src="bower_components/tracking.js/build/data/eye-min.js"></script>
+  <script src="bower_components/tracking.js/build/data/mouth-min.js"></script>
+  <script type="text/javascript">
+  $(function() {
+
+    // Video and canvas stuffs
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    // Color tracker
+    var colorTracker = new tracking.ColorTracker();
+    colorTracker.on('track', function(event) {
+      event.data.forEach(function(rect) {
+        if (rect.color === 'custom') {
+          rect.color = colorTracker.customColor;
+        }
+        context.strokeStyle = rect.color;
+        context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+      });
+    });
+
+    // Face tracker
+    var tracker = new tracking.ObjectTracker('face');
+    tracker.setInitialScale(4);
+    tracker.setStepSize(1.5);
+    tracker.setEdgesDensity(0.1);
+    tracker.on('track', function(event) {
+      if (event.data.length > 0) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = '#FFB500';
+        event.data.forEach(function(rect) {
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        });
+      }
+    });
+
+    // Mouth Tracker
+    var mTracker = new tracking.ObjectTracker('mouth');
+    mTracker.setInitialScale(1.5);
+    mTracker.setStepSize(1.5);
+    mTracker.setEdgesDensity(0.1);
+    mTracker.on('track', function(event) {
+      if (event.data.length > 0) {
+        context.strokeStyle = '#FF623D';
+        event.data.forEach(function(rect) {
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        });
+      }
+    });
+
+    var startButton = $('#start');
+    var stopButton = $('#stop');
+
+    var faceTracker = tracking.track('#video', tracker, { camera: true });
+    var mouthTracker = tracking.track('#video', mTracker);
+
+    startButton.on('click', function() {
+      faceTracker.run();
+      mouthTracker.run();
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      startButton.addClass('disabled');
+      stopButton.removeClass('disabled');
+    });
+
+    stopButton.on('click', function() {
+      faceTracker.stop();
+      mouthTracker.stop();
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      stopButton.addClass('disabled');
+      startButton.removeClass('disabled');
+    });
+
+    // Enable the color picker
+    var colorPicker = $('#customColor').colorpicker();
+    colorPicker.on('changeColor', function(e) {
+      colorPicker.val(e.color.toHex());
+    });
+
+    var cyan = $('#cyan');
+    var magenta = $('#magenta');
+    var yellow = $('#yellow');
+    var custom = $('#custom');
+
+    custom.on('click', function(e){
+      if (custom.prop('checked') === false) {
+        colorPicker.hide();
+      } else {
+        colorPicker.show();
+        colorPicker.removeClass('hidden');
+      }
+    });
+
+
+
+
+    function initGUIControllers(tracker) {
+      // GUI Controllers
+
+      var gui = new dat.GUI();
+
+      var trackedColors = {
+        custom: false
+      };
+
+      Object.keys(tracking.ColorTracker.knownColors_).forEach(function(color) {
+        trackedColors[color] = true;
+      });
+
+      tracker.customColor = '#000000';
+
+      function createCustomColor(value) {
+        var components = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(value);
+        var customColorR = parseInt(components[1], 16);
+        var customColorG = parseInt(components[2], 16);
+        var customColorB = parseInt(components[3], 16);
+
+        var colorTotal = customColorR + customColorG + customColorB;
+
+        if (colorTotal === 0) {
+          tracking.ColorTracker.registerColor('custom', function(r, g, b) {
+            return r + g + b < 10;
+          });
+        } else {
+          var rRatio = customColorR / colorTotal;
+          var gRatio = customColorG / colorTotal;
+
+          tracking.ColorTracker.registerColor('custom', function(r, g, b) {
+            var colorTotal2 = r + g + b;
+
+            if (colorTotal2 === 0) {
+              if (colorTotal < 10) {
+                return true;
+              }
+              return false;
+            }
+
+            var rRatio2 = r / colorTotal2,
+            gRatio2 = g / colorTotal2,
+            deltaColorTotal = colorTotal / colorTotal2,
+            deltaR = rRatio / rRatio2,
+            deltaG = gRatio / gRatio2;
+
+            return deltaColorTotal > 0.9 && deltaColorTotal < 1.1 &&
+            deltaR > 0.9 && deltaR < 1.1 &&
+            deltaG > 0.9 && deltaG < 1.1;
+          });
+        }
+
+        updateColors();
+      }
+
+      function updateColors() {
+        var colors = [];
+
+        for (var color in trackedColors) {
+          if (trackedColors[color]) {
+            colors.push(color);
+          }
+        }
+
+        tracker.setColors(colors);
+      }
+
+      updateColors();
+    }
+
+
+  });
+  </script>
+</body>
+</html>
